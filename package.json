@@ -1,0 +1,45 @@
+{
+    "name" : "googlee",
+    "version" : "0.0.1",
+    "description" : "A clean and simple load balancer",
+    "keywords": [
+        "googlee",
+        "google",
+        "seo",
+        "crawling",
+        "crawler",
+        ""
+    ],
+    "main" : "./index.js",
+    "bin": {
+        "googlee": "./bin/googlee"
+    },
+    "directories" : {
+        "lib" : "./lib"
+    },
+    "dependencies" : {
+        "optimist": "0.3.x",
+        "underscore": "1.4.2",
+        "phantom": "0.3.5",
+        "express": "3.0.0"
+    },
+    "scripts" : {
+        "start" : "node bin/googlee"
+    },
+    "engines" : {
+        "node" : "0.8.x"
+    },
+    "engineStrict": true,
+    "author" : {
+        "name" : "Aaron O'Mullan",
+        "email" : "aaron.omullan@gmail.com",
+        "url" : "http://friendco.de"
+    },
+    "maintainer" : [
+        "Aaron O'Mullan <aaron.omullan@gmail.com>"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "http://github.com/AaronO/googlee.git"
+    }
+}
