@@ -34,20 +34,63 @@ Fetcher.prototype.buildPage = function () {
         }
         this.page.applyProxy();
     }
+
+    var that = this;
+
+
+    this.resourcesRequested = 0;
+    this.resourcesReceived = 0;
+    this.page.onResourceRequested = function(request) {
+        that.resourcesRequested += 1;
+    };
+
+    this.page.onResourceReceived = function(response) {
+        that.resourcesReceived += 1;
+        if(that.hasLoadedResources()) {
+            var resourceCount = that.resourcesReceived;
+
+            // Delay a check to make sure
+            var callLater = (function(count) {
+                return function() {
+                    if(that.hasLoadedResources() && that.resourcesReceived == resourceCount) {
+                        that.onResourcesLoaded(count);
+                    }
+                };
+            })(resourceCount);
+
+            setTimeout(callLater, 50);
+        }
+    };
+
+    this.page.settings.userAgent = 'googlebot';
+    this.page.settings.loadImages = false;
+    this.page.settings.loadPlugins = true;
+
+    this.page.onConsoleMessage = function(msg) {
+        console.log('[Page]', "'"+msg+"'");
+    };
 };
 
-Fetcher.prototype.fetch = function(url, callback) {
+Fetcher.prototype.hasLoadedResources = function() {
+    return this.resourcesRequested == this.resourcesReceived;
+};
+
+
+Fetcher.prototype.onResourcesLoaded = function(count) {
+    console.log('Loaded ' + count + ' resources');
+};
+
+Fetcher.prototype.fetch = function(url, _callback) {
     this.url = url ? url : this.url;
     var that = this;
+    var callback = _callback || function() {};
+    var toCall =  function(status) {
+        that.onFetch.call(that, status);
+        callback(status, that.page);
+    };
+
     this.buildPage();
-    this.page.open(this.url, function(status) {
-        if(!callback) {
-            that.onFetch.call(that, status);
-        }
-        else {
-            callback(status, that.page);
-        }
-    });
+    this.page.open(this.url, toCall);
 };
 
 Fetcher.prototype.onFetch = function(status) {
