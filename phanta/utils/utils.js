@@ -222,7 +222,13 @@ var getURI = function(page) {
 
 var screenshot = function(page,path) {
     page.render(path);
-}
+};
+
+var proxyMethod = function(obj, someMethod) {
+    return function() {
+        someMethod.apply(obj, arguments);
+    };
+};
 
 
 // Exports
@@ -240,3 +246,4 @@ exports.getURI = getURI;
 exports.screenshot = screenshot;
 exports.populateTextInputs = populateTextInputs;
 exports.populateSelectInputs = populateSelectInputs;
+exports.proxyMethod = proxyMethod;
