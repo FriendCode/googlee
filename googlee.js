@@ -15,7 +15,7 @@ function GoogleeView(request, response) {
 
     // Fetch
     var fetcher = new mfetcher.Fetcher({
-        debug: true
+        checkTimeout: 50
     });
     fetcher.fetch(url, function(status, page) {
         if(status != 'success') {

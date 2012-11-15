@@ -230,6 +230,10 @@ var proxyMethod = function(obj, someMethod) {
     };
 };
 
+var stringRepeat = function(str, n) {
+    n = n || 1;
+    return Array(n+1).join(str);
+};
 
 // Exports
 exports.waitForWithParam = waitForWithParam;
@@ -247,3 +251,4 @@ exports.screenshot = screenshot;
 exports.populateTextInputs = populateTextInputs;
 exports.populateSelectInputs = populateSelectInputs;
 exports.proxyMethod = proxyMethod;
+exports.stringRepeat = stringRepeat;

@@ -1,5 +1,6 @@
 // Includes
 var mutils = require('../utils/utils');
+var stringRepeat = mutils.stringRepeat;
 var proxyMethod = mutils.proxyMethod;
 
 // Consts
@@ -20,6 +21,7 @@ function Fetcher(options) {
     this.loadImages = options.loadImages || false;
     this.loadPlugins = options.loadPlugins || false;
     this.debug = options.debug || false;
+    this.viewportSize = { width: 1280, height: 800};
 
     // Extra options
     this.checkTimeout = options.checkTimeout || 100;
@@ -27,8 +29,7 @@ function Fetcher(options) {
     // Resource counts
     this.resourcesStatus = [];
 
-    // Setup the page
-    this.buildPage();
+    this.hasAnswered = false;
 }
 
 Fetcher.prototype.buildPage = function () {
@@ -63,6 +64,7 @@ Fetcher.prototype.buildPage = function () {
     this.page.settings.userAgent = this.userAgent;
     this.page.settings.loadImages = this.loadImages;
     this.page.settings.loadPlugins = this.loadPlugins;
+    this.page.viewportSize = this.viewportSize;
 
 };
 
@@ -91,6 +93,7 @@ Fetcher.prototype.pageOnResourceReceived = function(resource) {
     if(resource.stage != 'end' || this.resourcesStatus[resource.id]) {
         return;
     }
+
     // else
     this.resourcesStatus[resource.id] = true;
 
@@ -98,7 +101,10 @@ Fetcher.prototype.pageOnResourceReceived = function(resource) {
 };
 
 Fetcher.prototype.hasLoadedResources = function() {
-    return this.resourcesStatus.every(Boolean);
+    if(this.hasAnswered) {
+        console.log('Already responded !!!');
+    }
+    return this.resourcesStatus.every(Boolean) && !this.hasAnswered;
 };
 
 Fetcher.prototype.requestedResourceCount = function() {
@@ -127,10 +133,11 @@ Fetcher.prototype.checkLoaded = function() {
         ) {
             that.onResourcesLoaded();
         }
-    }, 100);
+    }, this.checkTimeout);
 };
 
 Fetcher.prototype.onResourcesLoaded = function(count) {
+    this.hasAnswered = true;
     this.callback(this.status, this.page);
 };
 
@@ -140,7 +147,7 @@ Fetcher.prototype.fetch = function(url, callback) {
     this.callback = callback || function() {};
 
     // Call callabck only when all resources are loaded
-
+    this.buildPage();
     this.page.open(this.url, function(status) {
         that.status = status;
 
