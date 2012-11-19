@@ -3,6 +3,8 @@ var mutils = require('../utils/utils');
 var stringRepeat = mutils.stringRepeat;
 var proxyMethod = mutils.proxyMethod;
 
+var FetcherResponse = require('./response').FetcherResponse;
+
 // Consts
 //var DEFAULT_USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_3) AppleWebKit/535.20 (KHTML, like Gecko) Chrome/19.0.1036.7 Safari/535.20";
 var DEFAULT_USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11";
@@ -15,6 +17,7 @@ function Fetcher(options) {
     this.proxy_auth = options.proxy_auth;
     this.proxy_type = options.proxy_type || 'http';
     this.url = options.url || '';
+    this.callback = options.callback || function() {};
 
     // page options
     this.userAgent = options.userAgent || DEFAULT_USER_AGENT;
@@ -25,140 +28,55 @@ function Fetcher(options) {
 
     // Extra options
     this.checkTimeout = options.checkTimeout || 100;
-
-    // Resource counts
-    this.resourcesStatus = [];
-
-    this.hasAnswered = false;
 }
 
 Fetcher.prototype.buildPage = function () {
-    this.page = new WebPage();
+    var page = new WebPage();
 
     // Setup Proxy
     if(this.proxy)
     {
-        this.page.setProxyType(this.proxy_type);
-        this.page.setProxy(this.proxy);
+        page.setProxyType(this.proxy_type);
+        page.setProxy(this.proxy);
         if(this.proxy_auth)
         {
-            this.page.setProxyAuth(this.proxy_auth);
+            page.setProxyAuth(this.proxy_auth);
         }
-        this.page.applyProxy();
-    }
-
-    var that = this;
-
-
-    // Bind resource methods
-    this.page.onResourceRequested = proxyMethod(this, this.pageOnResourceRequested);
-    this.page.onResourceReceived = proxyMethod(this, this.pageOnResourceReceived);
-
-    // Debugging aids
-    if(this.debug) {
-        this.page.onConsoleMessage = proxyMethod(this, this.pageOnConsoleMessage);
-        this.page.onError = proxyMethod(this, this.pageOnError);
+        page.applyProxy();
     }
 
     // To do with loading ...
-    this.page.settings.userAgent = this.userAgent;
-    this.page.settings.loadImages = this.loadImages;
-    this.page.settings.loadPlugins = this.loadPlugins;
-    this.page.viewportSize = this.viewportSize;
+    page.settings.userAgent = this.userAgent;
+    page.settings.loadImages = this.loadImages;
+    page.settings.loadPlugins = this.loadPlugins;
+    page.viewportSize = this.viewportSize;
 
+    return page;
 };
 
-
-
-Fetcher.prototype.pageOnConsoleMessage = function(msg) {
-    console.log('[PageDebug] :', msg);
-};
-
-Fetcher.prototype.pageOnError = function(msg, trace) {
-    var msgStack = ['[PageError] : ' + msg];
-    if (trace) {
-        msgStack.push('TRACE:');
-        trace.forEach(function(t) {
-            msgStack.push(' -> ' + t.file + ': ' + t.line + (t.function ? ' (in function "' + t.function + '")' : ''));
-        });
-    }
-    console.error(msgStack.join('\n'));
-};
-
-Fetcher.prototype.pageOnResourceRequested = function(resource) {
-    this.resourcesStatus[resource.id] = false;
-};
-
-Fetcher.prototype.pageOnResourceReceived = function(resource) {
-    if(resource.stage != 'end' || this.resourcesStatus[resource.id]) {
-        return;
-    }
-
-    // else
-    this.resourcesStatus[resource.id] = true;
-
-    this.checkLoaded();
-};
-
-Fetcher.prototype.hasLoadedResources = function() {
-    if(this.hasAnswered) {
-        console.log('Already responded !!!');
-    }
-    return this.resourcesStatus.every(Boolean) && !this.hasAnswered;
-};
-
-Fetcher.prototype.requestedResourceCount = function() {
-    return this.resourcesStatus.length;
-};
-
-Fetcher.prototype.receivedResourceCount = function() {
-    return this.resourcesStatus.filter(Boolean).length;
-};
-
-Fetcher.prototype.checkLoaded = function() {
-    if(!this.hasLoadedResources()) return;
-
-    var that = this;
-
-    var receivedCount = this.receivedResourceCount();
-    var requestedCount = this.requestedResourceCount();
-
-    setTimeout(function() {
-        var nowReceived = that.receivedResourceCount();
-        var nowRequested = that.requestedResourceCount();
-
-        if(that.hasLoadedResources() &&
-            receivedCount == nowReceived &&
-            requestedCount == nowRequested
-        ) {
-            that.onResourcesLoaded();
-        }
-    }, this.checkTimeout);
-};
-
-Fetcher.prototype.onResourcesLoaded = function(count) {
-    this.hasAnswered = true;
-    this.callback(this.status, this.page);
-};
 
 Fetcher.prototype.fetch = function(url, callback) {
-    var that = this;
-    this.url = url || this.url;
-    this.callback = callback || function() {};
+    url = url || this.url;
+    callback = callback || this.callback;
 
     // Call callabck only when all resources are loaded
-    this.buildPage();
-    this.page.open(this.url, function(status) {
-        that.status = status;
+    var page = this.buildPage();
 
-        // Failed so call callback right away
-        if(status != 'success') {
-            that.callback(status, that.page);
-            return;
-        }
+    // Our options for the fetcher
+    var fetcherOptions = {
+        url: url,
+        page: page,
+        debug: this.debug,
+        checkTimeout: this.checkTimeout,
+        callback: callback
+    };
 
-        // Wait for onResourcesLoaded
-    });
+    // The response handles making sure all the resources are loaded
+    // etc ...
+    var response = new FetcherResponse(fetcherOptions);
+
+    // Fetch page and respond
+    response.execute();
 };
 
 

@@ -2,6 +2,15 @@
 var mserver =  require('./phanta/server/server');
 var mviews = require('./phanta/views/base');
 var mfetcher = require('./phanta/io/fetcher');
+var MetaExtractor = require('./lib/metainfo').MetaExtractor;
+
+
+// Handle errors with http responses
+function handleError(statusCode, msg, response) {
+    response.statusCode = statusCode;
+    response.write(msg);
+    response.close();
+}
 
 // Constructor
 function GoogleeView(request, response) {
@@ -17,27 +26,27 @@ function GoogleeView(request, response) {
     var fetcher = new mfetcher.Fetcher({
         checkTimeout: 50
     });
-    fetcher.fetch(url, function(status, page) {
-        if(status != 'success') {
-            throw Error('Failed to load page : "'+url+'"');
+    fetcher.fetch(url, function(err, fetchedResponse) {
+        // Couldn't open page ...
+        if(err) {
+            return handleError(404, 'Failed to load page : "'+url+'"', response);
         }
 
-        var getHtml = function() {
-            return page.evaluate(function() {
-                return document.documentElement.outerHTML;
-            });
-        };
+        // Build meta extractor
+        var page = fetchedResponse.page;
+        var meta = new MetaExtractor(page);
 
-        var renderHtml = function() {
-            var html = getHtml();
+        // Handle HTTP error triggered by Javascript client
+        if(meta.hasHttpErrors()) {
 
-            // Write the content
-            response.write(html);
-            response.close();
-        };
+            var httpError = meta.getMainHttpError();
+            return handleError(httpError.code, httpError.msg, response);
+        }
 
-        // Render response to client
-        renderHtml();
+        // Seems to be normal, render response to client
+        var html = fetchedResponse.getHtml();
+        response.write(html);
+        response.close();
     });
 }
 
