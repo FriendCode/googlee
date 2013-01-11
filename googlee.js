@@ -24,7 +24,7 @@ function GoogleeView(request, response) {
 
     // Fetch
     var fetcher = new mfetcher.Fetcher({
-        checkTimeout: 50,
+        checkTimeout: 100,
         userAgent: 'Googlee'
     });
     fetcher.fetch(url, function(err, fetchedResponse) {
