@@ -121,10 +121,11 @@ FetcherResponse.prototype.getHtml = function() {
 };
 
 FetcherResponse.prototype.execute = function() {
+    var that = this;
     this.page.open(this.url, function(status) {
         // Failed so call callback right away
         if(status != 'success') {
-            that.callback(Error('Failure opening page'), this);
+            that.callback(Error('Failure opening page'), that);
             return;
         }
 
