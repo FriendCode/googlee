@@ -30,7 +30,7 @@ function GoogleeView(request, response) {
     fetcher.fetch(url, function(err, fetchedResponse) {
         // Couldn't open page ...
         if(err) {
-            return handleError(404, 'Failed to load page : "'+url+'"', response);
+            return handleError(404, 'Failed to load page : "'+url+'". ' + String(err), response);
         }
 
         // Build meta extractor
@@ -48,6 +48,7 @@ function GoogleeView(request, response) {
         var html = fetchedResponse.getHtml();
         response.write(html);
         response.close();
+        fetchedResponse.close();
     });
 }
 

@@ -110,6 +110,9 @@ FetcherResponse.prototype.checkLoaded = function() {
 };
 
 FetcherResponse.prototype.onResourcesLoaded = function(count) {
+    if(!this.hasLoadedResources()) {
+        return;
+    }
     this.hasAnswered = true;
     this.callback(null, this);
 };
@@ -124,13 +127,18 @@ FetcherResponse.prototype.execute = function() {
     var that = this;
     this.page.open(this.url, function(status) {
         // Failed so call callback right away
-        if(status != 'success') {
-            that.callback(Error('Failure opening page'), that);
+        if(status === 'fail') {
+            var error = Error('Failure opening page : ' + "'"+status+"'");
+            that.callback(error, that);
             return;
         }
 
         // Wait for onResourcesLoaded
     });
+};
+
+FetcherResponse.prototype.close = function() {
+    this.page.close();
 };
 
 // Exports
