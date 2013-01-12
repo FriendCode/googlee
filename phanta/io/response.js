@@ -110,7 +110,7 @@ FetcherResponse.prototype.checkLoaded = function() {
 };
 
 FetcherResponse.prototype.onResourcesLoaded = function(count) {
-    if(!this.hasLoadedResources()) {
+    if(this.hasAnswered) {
         return;
     }
     this.hasAnswered = true;
@@ -128,6 +128,7 @@ FetcherResponse.prototype.execute = function() {
     this.page.open(this.url, function(status) {
         // Failed so call callback right away
         if(status === 'fail') {
+            this.hasAnswered = true;
             var error = Error('Failure opening page : ' + "'"+status+"'");
             that.callback(error, that);
             return;
