@@ -22,6 +22,9 @@ function GoogleeView(request, response) {
         throw Error('Requires url parameter');
     }
 
+    // Log
+    console.log('Fetching :', url);
+
     // Fetch
     var fetcher = new mfetcher.Fetcher({
         checkTimeout: 100,
