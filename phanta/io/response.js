@@ -23,6 +23,9 @@ function FetcherResponse(options) {
     // Resource counts
     this.resourcesStatus = [];
 
+    // HTTP Status codes
+    this.resourcesStatusCodes = [];
+
     this.hasAnswered = false;
 
     // VERY important
@@ -69,6 +72,7 @@ FetcherResponse.prototype.pageOnResourceReceived = function(resource) {
 
     // else
     this.resourcesStatus[resource.id] = true;
+    this.resourcesStatusCodes[resource.id] = resource.status;
 
     this.checkLoaded();
 };
@@ -123,11 +127,16 @@ FetcherResponse.prototype.getHtml = function() {
     });
 };
 
+FetcherResponse.prototype.hasFailed = function() {
+    // Fail if the main page returned other than 200
+    return this.resourcesStatusCodes[1] != 200;
+};
+
 FetcherResponse.prototype.execute = function() {
     var that = this;
     this.page.open(this.url, function(status) {
         // Failed so call callback right away
-        if(status === 'fail') {
+        if(that.hasFailed()) {
             this.hasAnswered = true;
             var error = Error('Failure opening page : ' + "'"+status+"'");
             that.callback(error, that);
