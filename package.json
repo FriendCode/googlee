@@ -1,0 +1,51 @@
+{
+    "name": "googlee",
+    "version": "0.0.1",
+    "description": "Make one page applications crawlable",
+
+    "keywords": [
+        "seo",
+        "googlee",
+        "crawlable",
+        "one",
+        "single",
+        "page",
+        "index",
+        "google",
+        "bot",
+        "crawler"
+    ],
+    "main" : "./index.js",
+    "directories" : {
+        "lib" : "./lib"
+    },
+    "bin": {
+        "googlee": "./bin/googlee"
+    },
+    "dependencies" : {
+        "underscore": "1.4.4",
+        "q": "0.9.4",
+
+        "lru-cache": "2.3.0",
+
+        "zombie": "git+https://github.com/FriendCode/zombie-build.git",
+
+        "restify": "2.3.2",
+
+        "commander": "1.1.1"
+    },
+    "engines" : {
+        "node" : "0.8.x"
+    },
+    "engineStrict": true,
+    "author" : {
+        "name" : "Aaron O'Mullan",
+        "email" : "aaron.omullan@gmail.com",
+        "url" : "http://friendco.de"
+    },
+    "maintainer" : [
+        "Aaron O'Mullan <aaron.omullan@gmail.com>"
+    ],
+    "author": "Aaron O'Mullan",
+    "license": "BSD"
+}
